@@ -1,49 +1,85 @@
-import React, { useState } from "react";
+import React from "react";
 import "./App.css";
-import { useDispatch, useSelector } from "react-redux";
-import { RootState } from "./app/store";
-import ReservationCard from "./components/ReservationCard";
-import { addReservation } from "./features/reservationSlice";
-import CustomerCard from "./components/CustomerCard";
+import { createRoutesFromElements, createBrowserRouter, RouterProvider, Route } from "react-router-dom";
+import Reservation from "./routes/reservation";
+import ErrorPage from "./routes/error-page";
+import Contact, { loader as contactLoader, action as contactAction } from "./routes/contact";
+import Root, {loader as rootLoader, action as rootAction} from "./routes/root";
+import EditContact, { action as editAction } from "./routes/edit";
+import { action as destroyAction } from "./routes/destroy";
+import Index from "./routes";
+
 
 function App() {
-  const [reservationNameInput, setReservationNameInput] = useState<string>("");
-  const reservations = useSelector((state: RootState) => state.reservations.value);
-  const customers = useSelector((state: RootState) => state.customer.value);
+  // const router = createBrowserRouter([
+  //   {
+  //     path: "/",
+  //     element: <Root />,
+  //     errorElement: <ErrorPage />,
+  //     loader: rootLoader,
+  //     action: rootAction,
+  //     children: [
+  //       {
+  //         errorElement: <ErrorPage />,
+  //         children: [
+  //         { index: true, element: <Index /> },
+  //         {
+  //           path: "/reserve",
+  //           element: <Reservation />
+  //         },{
+  //           path: "/contacts/:contactId",
+  //           element: <Contact />,
+  //           loader: contactLoader,
+  //           action: contactAction
+  //         },{
+  //           path: "/contacts/:contactId/edit",
+  //           element: <EditContact />,
+  //           loader: contactLoader,
+  //           action: editAction
+  //         },{
+  //           path: "/contacts/:contactId/destroy",
+  //           action: destroyAction,
+  //           errorElement: <div>Oops an error occured!!</div>
+  //         },]
+  //     },]
+  //   },
+  // ]);
+  const router = createBrowserRouter(
+    createRoutesFromElements(
+      <Route
+        path="/"
+        element={<Root />}
+        loader={rootLoader}
+        action={rootAction}
+        errorElement={<ErrorPage />}
+      >
+        <Route errorElement={<ErrorPage />}>
+          <Route index element={<Index />} />
+          <Route path="/reserve" element={<Reservation />} />
+          <Route
+            path="contacts/:contactId"
+            element={<Contact />}
+            loader={contactLoader}
+            action={contactAction}
+          />
+          <Route
+            path="contacts/:contactId/edit"
+            element={<EditContact />}
+            loader={contactLoader}
+            action={editAction}
+          />
+          <Route
+            path="contacts/:contactId/destroy"
+            action={destroyAction}
+          />
+        </Route>
+      </Route>
+    )
+  );
 
-  const dispatch = useDispatch();
-
-  const handleReservation = () => {
-    if (!reservationNameInput) return;
-    dispatch(addReservation(reservationNameInput));
-    setReservationNameInput("");
-  }
+  
   return (
-    <div className="App">
-      <div className="container">
-        <div className="reservation-container">
-          <div>
-            <h5 className="reservation-header">Reservations</h5>
-            <div className="reservation-cards-container">
-              { 
-                reservations.map((name, index)=> {
-                  return <ReservationCard name={name} index={index} />
-                })
-              }
-            </div>
-          </div>
-          <div className="reservation-input-container">
-            <input value={reservationNameInput} onChange={(e)=>setReservationNameInput(e.target.value)} />
-            <button onClick={handleReservation}>Add</button>
-          </div>
-        </div>
-        <div className="customer-food-container">
-          {
-            customers.map((customer) => <CustomerCard id={customer.id} name={customer.name} food={customer.food} />)
-          }
-        </div>
-      </div>
-    </div>
+    <RouterProvider router={router} />
   );
 }
 
